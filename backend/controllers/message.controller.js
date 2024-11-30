@@ -4,8 +4,7 @@ const User = require('../models/user');
 // Update message by sender
 exports.updateMessage = async (req, res) => {
     try {
-        const { messageId } = req.params;  
-        const { text, imageUrl } = req.body;  
+        const { text, imageUrl, messageId} = req.body;  
         const { userId } = req.user.id; 
 
         const message = await Message.findById(messageId);
@@ -31,7 +30,7 @@ exports.updateMessage = async (req, res) => {
 
 exports.deleteMessage = async (req, res) => {
     try {
-        const { messageId } = req.params;  
+        const { messageId } = req.body;  
         const { userId } = req.user.id;  
 
         const message = await Message.findById(messageId);
@@ -51,6 +50,55 @@ exports.deleteMessage = async (req, res) => {
         await message.deleteOne();
 
         res.status(200).json({ message: 'Message deleted successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+// Add a message to a chat
+
+exports.addMessageToChat = async (req, res) => {
+    try {
+        const { text, imageUrl,chatId} = req.body;
+        const { sender } = req.user.id;
+
+
+        if ((!text && !imageUrl)) {
+            return res.status(400).json({ error: 'Sender and either text or imageUrl are required.' });
+        }
+
+        const message = new Message({
+            text,
+            imageUrl,
+            sender,
+            chatId,
+        });
+        await message.save();
+
+        const chat = await Chat.findByIdAndUpdate(
+            chatId,
+            { 
+                $push: { messages: message._id },
+                $set: { updatedAt: new Date() }, 
+            },
+            { new: true }
+        )
+            .populate('participants', '-password')
+            .populate('admin', '-password')
+            .populate({
+                path: 'messages',
+                options: { sort: { createdAt: -1 }, limit: 1 }, 
+                populate: { path: 'sender', select: '-password' },
+            });
+
+        if (!chat) {
+            return res.status(404).json({ error: 'Chat not found.' });
+        }
+
+        res.status(201).json({
+            message: 'Message added successfully.',
+            messageDetails: message,
+            updatedChat: chat,
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

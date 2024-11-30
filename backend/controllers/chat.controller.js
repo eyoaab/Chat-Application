@@ -1,5 +1,4 @@
 const Chat = require('../models/chat.model');
-const User = require('../models/user.model');
 const Message = require('../models/message.model');
 
 // Create a new chat
@@ -25,7 +24,7 @@ exports.createChat = async (req, res) => {
 // Get chat by ID
 exports.getChatById = async (req, res) => {
     try {
-        const { chatId } = req.params;
+        const { chatId } = req.body;
 
         const chat = await Chat.findById(chatId)
             .populate('participants', '-password')
@@ -71,60 +70,11 @@ exports.getUserChats = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-// Add a message to a chat
-exports.addMessageToChat = async (req, res) => {
-    try {
-        const { chatId } = req.params;
-        const { text, imageUrl} = req.body;
-        const { sender } = req.user.id;
 
-
-        if ((!text && !imageUrl)) {
-            return res.status(400).json({ error: 'Sender and either text or imageUrl are required.' });
-        }
-
-        const message = new Message({
-            text,
-            imageUrl,
-            sender,
-            chatId,
-        });
-        await message.save();
-
-        const chat = await Chat.findByIdAndUpdate(
-            chatId,
-            { 
-                $push: { messages: message._id },
-                $set: { updatedAt: new Date() }, 
-            },
-            { new: true }
-        )
-            .populate('participants', '-password')
-            .populate('admin', '-password')
-            .populate({
-                path: 'messages',
-                options: { sort: { createdAt: -1 }, limit: 1 }, 
-                populate: { path: 'sender', select: '-password' },
-            });
-
-        if (!chat) {
-            return res.status(404).json({ error: 'Chat not found.' });
-        }
-
-        res.status(201).json({
-            message: 'Message added successfully.',
-            messageDetails: message,
-            updatedChat: chat,
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
 // Update group chat details
 exports.updateGroupChat = async (req, res) => {
     try {
-        const { chatId } = req.params;
-        const { groupName, groupProfilePicture, groupDescription } = req.body;
+        const { groupName, groupProfilePicture, groupDescription,chatId } = req.body;
         const {userId} =  req.user.id;
 
         if (!groupName && !groupProfilePicture && !groupDescription) {
@@ -170,7 +120,7 @@ exports.updateGroupChat = async (req, res) => {
 // Delete a chat
 exports.deleteChat = async (req, res) => {
     try {
-        const { chatId } = req.params;
+        const { chatId } = req.body;
         const { userId } = req.user.id;  
 
         const chat = await Chat.findById(chatId);
@@ -197,8 +147,7 @@ exports.deleteChat = async (req, res) => {
 // add members to the group
 exports.addParticipants = async (req, res) => {
     try {
-        const { chatId } = req.params;
-        const { participantsToAdd} = req.body;
+        const { participantsToAdd,chatId} = req.body;
 
         const chat = await Chat.findById(chatId);
         if (!chat || !chat.isGroup) {
@@ -219,8 +168,7 @@ exports.addParticipants = async (req, res) => {
 // remove members from the chat
 exports.removeParticipants = async (req, res) => {
     try {
-        const { chatId } = req.params;
-        const { participantsToRemove} = req.body;
+        const { participantsToRemove,chatId} = req.body;
 
 
         const chat = await Chat.findById(chatId);
@@ -243,7 +191,7 @@ exports.removeParticipants = async (req, res) => {
 
 exports.removeOurselfFromTheChat = async (req, res) => {
     try {
-        const { chatId } = req.params;
+        const { chatId } = req.body;
         const { userId } = req.user.id; 
 
         const chat = await Chat.findById(chatId);
@@ -273,7 +221,7 @@ exports.removeOurselfFromTheChat = async (req, res) => {
 // Add our self to the group 
 exports.addOurself = async (req, res) => {
     try {
-        const { chatId } = req.params;
+        const { chatId } = req.body;
         const { userId } = req.user.id; 
 
         const chat = await Chat.findById(chatId);

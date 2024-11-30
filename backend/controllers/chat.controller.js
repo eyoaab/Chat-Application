@@ -5,7 +5,8 @@ const Message = require('../models/message.model');
 exports.createChat = async (req, res) => {
     try {
         const { isGroup, participants, groupName, groupProfilePicture, groupDescription } = req.body;
-        const {admin} = req.user.id;
+        const admin = req.user.userId;
+
         const chat = new Chat({
             isGroup,
             participants,
@@ -49,7 +50,7 @@ exports.getChatById = async (req, res) => {
 // Get all chats for a user
 exports.getUserChats = async (req, res) => {
     try {
-        const { userId } = req.user.id;
+        const userId = req.user.userId;
 
         const chats = await Chat.find({ participants: userId })
             .sort({ updatedAt: -1 })
@@ -75,7 +76,8 @@ exports.getUserChats = async (req, res) => {
 exports.updateGroupChat = async (req, res) => {
     try {
         const { groupName, groupProfilePicture, groupDescription,chatId } = req.body;
-        const {userId} =  req.user.id;
+        const userId = req.user.userId;
+
 
         if (!groupName && !groupProfilePicture && !groupDescription) {
             return res.status(400).json({ error: 'No fields provided to update.' });
@@ -121,7 +123,8 @@ exports.updateGroupChat = async (req, res) => {
 exports.deleteChat = async (req, res) => {
     try {
         const { chatId } = req.body;
-        const { userId } = req.user.id;  
+        const userId = req.user.userId;
+
 
         const chat = await Chat.findById(chatId);
         if (!chat) {
@@ -170,7 +173,6 @@ exports.removeParticipants = async (req, res) => {
     try {
         const { participantsToRemove,chatId} = req.body;
 
-
         const chat = await Chat.findById(chatId);
         if (!chat || !chat.isGroup) {
             return res.status(400).json({ error: 'Chat not found or is not a group chat.' });
@@ -192,7 +194,8 @@ exports.removeParticipants = async (req, res) => {
 exports.removeOurselfFromTheChat = async (req, res) => {
     try {
         const { chatId } = req.body;
-        const { userId } = req.user.id; 
+        const  userId  = req.user.userId;  
+
 
         const chat = await Chat.findById(chatId);
         if (!chat || !chat.isGroup) {
@@ -222,7 +225,7 @@ exports.removeOurselfFromTheChat = async (req, res) => {
 exports.addOurself = async (req, res) => {
     try {
         const { chatId } = req.body;
-        const { userId } = req.user.id; 
+        const  userId  = req.user.userId;  
 
         const chat = await Chat.findById(chatId);
         

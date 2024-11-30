@@ -1,4 +1,4 @@
-const User = require('../models/user'); 
+const User = require('../models/user.model'); 
 const jwt = require('jsonwebtoken'); 
 
 exports.signup = async (req, res) => {
@@ -58,7 +58,8 @@ exports.login = async (req, res) => {
 
 exports.logout = async (req, res) => {
     try {
-        const { userId } = req.user.id;
+        const userId = req.user.userId;
+
 
         const user = await User.findById(userId);
         if (!user) {
@@ -76,7 +77,7 @@ exports.logout = async (req, res) => {
 
 exports.getUserProfile = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const { userId } = req.body;
 
         // Find user by ID
         const user = await User.findById(userId);
@@ -92,8 +93,9 @@ exports.getUserProfile = async (req, res) => {
 
 exports.updateUserProfile = async (req, res) => {
     try {
-        const {loginUser} = req.user.id;
-        const { userId } = req.params.id;
+        const loginUser = req.user.userId;
+        const userId  = req.params.id;
+       
         const { name, bio, profilePicture } = req.body;
 
         // Find user by ID
@@ -136,7 +138,8 @@ exports.getAllUsers = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     try {
-        const {loginUser} = req.user.id;
+        const loginUser = req.user.userId;
+
         const { userId } = req.params;
 
         const user = await User.findById(userId);

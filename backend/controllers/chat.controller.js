@@ -5,8 +5,8 @@ const Message = require('../models/message.model');
 // Create a new chat
 exports.createChat = async (req, res) => {
     try {
-        const { isGroup, participants, admin, groupName, groupProfilePicture, groupDescription } = req.body;
-
+        const { isGroup, participants, groupName, groupProfilePicture, groupDescription } = req.body;
+        const {admin} = req.user.id;
         const chat = new Chat({
             isGroup,
             participants,

@@ -93,13 +93,17 @@ exports.getUserProfile = async (req, res) => {
 
 exports.updateUserProfile = async (req, res) => {
     try {
-        const { userId } = req.req.id;
+        const {loginUser} = req.user.id;
+        const { userId } = req.params.id;
         const { name, bio, profilePicture } = req.body;
 
         // Find user by ID
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
+        }
+        if (String(loginUser)!== String(userId)) {
+            return res.status(403).json({ error: 'You can only update your own profile.' });
         }
 
         // Update user details
@@ -133,11 +137,15 @@ exports.getAllUsers = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     try {
+        const {loginUser} = req.user.id;
         const { userId } = req.params;
 
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
+        }
+        if (String(user._id)!== String(loginUser)) {
+            return res.status(403).json({ error: 'You can only delete your own account.' });
         }
 
         await Message.deleteMany({ sender: userId });

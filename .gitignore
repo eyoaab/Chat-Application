@@ -71,4 +71,3 @@ temp/
 *.rej
 
 # Optional: Ignore package-lock.json
-package-lock.json
